@@ -21,6 +21,7 @@ public class ApiKeyService {
     public ApiKeyResponse gerar(ApiKeyRequest request) {
         ApiKey apiKey = new ApiKey();
         apiKey.setUsuario(request.usuario());
+        apiKey.setDescricao(request.descricao() == null ? "" : request.descricao());
         apiKey.setRole(request.role() == null ? ApiKeyRole.WRITE : request.role());
         apiKey.setChave(UUID.randomUUID().toString());
 
