@@ -7,13 +7,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import senac.tsi.superhero.entities.Poder;
+import senac.tsi.superhero.entities.SuperHeroi;
 import senac.tsi.superhero.repositories.PoderRepository;
+import senac.tsi.superhero.repositories.SuperHeroiRepository;
+
+import java.util.ArrayList;
 
 @Service
 public class PoderService {
 
     @Autowired
     private PoderRepository repository;
+
+    @Autowired
+    private SuperHeroiRepository heroiRepository;
 
     public Page<Poder> listar(Pageable pageable) {
         return repository.findAll(pageable);
@@ -66,5 +73,53 @@ public class PoderService {
         }
 
         return resultado;
+    }
+
+    public Poder adicionarHeroi(Long poderId, Long heroiId) {
+        Poder poder = buscarPorId(poderId);
+
+        SuperHeroi heroi = heroiRepository.findById(heroiId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Herói não encontrado"
+                ));
+
+        if (poder.getHerois() == null) {
+            poder.setHerois(new ArrayList<>());
+        }
+
+        boolean jaExiste = poder.getHerois().stream()
+                .anyMatch(h -> h.getId().equals(heroiId));
+
+        if (jaExiste) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Herói já possui esse poder"
+            );
+        }
+
+        poder.getHerois().add(heroi);
+        return repository.save(poder);
+    }
+
+    public Poder removerHeroi(Long poderId, Long heroiId) {
+        Poder poder = buscarPorId(poderId);
+
+        if (poder.getHerois() == null || poder.getHerois().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Herói não encontrado neste poder"
+            );
+        }
+
+        boolean removido = poder.getHerois().removeIf(h -> h.getId().equals(heroiId));
+
+        if (!removido) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Herói não encontrado neste poder"
+            );
+        }
+
+        return repository.save(poder);
     }
 }

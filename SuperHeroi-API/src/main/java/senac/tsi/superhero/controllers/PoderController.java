@@ -187,6 +187,35 @@ public class PoderController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @Operation(summary = "Adicionar herói ao poder")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Herói adicionado ao poder com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Poder ou herói não encontrado"),
+            @ApiResponse(responseCode = "409", description = "Herói já possui esse poder")
+    })
+    @PostMapping("/{id}/herois/{heroiId}")
+    public ResponseEntity<EntityModel<PoderResponse>> adicionarHeroi(
+            @PathVariable Long id,
+            @PathVariable Long heroiId) {
+
+        Poder atualizado = service.adicionarHeroi(id, heroiId);
+        return ResponseEntity.ok(toModel(PoderResponse.from(atualizado)));
+    }
+
+    @Operation(summary = "Remover herói do poder")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Herói removido do poder com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Poder ou herói não encontrado")
+    })
+    @DeleteMapping("/{id}/herois/{heroiId}")
+    public ResponseEntity<EntityModel<PoderResponse>> removerHeroi(
+            @PathVariable Long id,
+            @PathVariable Long heroiId) {
+
+        Poder atualizado = service.removerHeroi(id, heroiId);
+        return ResponseEntity.ok(toModel(PoderResponse.from(atualizado)));
+    }
+
     private EntityModel<PoderResponse> toModel(PoderResponse poder) {
 
         return EntityModel.of(
