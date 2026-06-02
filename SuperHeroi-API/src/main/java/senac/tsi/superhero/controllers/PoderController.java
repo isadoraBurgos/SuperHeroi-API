@@ -16,6 +16,7 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import senac.tsi.superhero.dto.PoderResponse;
 import senac.tsi.superhero.entities.Poder;
 import senac.tsi.superhero.services.IdempotencyService;
 import senac.tsi.superhero.services.PoderService;
@@ -42,16 +43,16 @@ public class PoderController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping
-    public ResponseEntity<PagedModel<EntityModel<Poder>>> listar(
+    public ResponseEntity<PagedModel<EntityModel<PoderResponse>>> listar(
             @ParameterObject Pageable pageable) {
 
         Page<Poder> pagina = service.listar(pageable);
 
         var lista = pagina.getContent().stream()
-                .map(this::toModel)
+                .map(p -> toModel(PoderResponse.from(p)))
                 .toList();
 
-        PagedModel<EntityModel<Poder>> pagedModel =
+        PagedModel<EntityModel<PoderResponse>> pagedModel =
                 PagedModel.of(
                         lista,
                         new PagedModel.PageMetadata(
@@ -76,11 +77,11 @@ public class PoderController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Poder>> buscar(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<PoderResponse>> buscar(@PathVariable Long id) {
 
         Poder poder = service.buscarPorId(id);
 
-        return ResponseEntity.ok(toModel(poder));
+        return ResponseEntity.ok(toModel(PoderResponse.from(poder)));
     }
 
     @Operation(
@@ -95,7 +96,7 @@ public class PoderController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @PostMapping
-    public ResponseEntity<EntityModel<Poder>> criar(
+    public ResponseEntity<EntityModel<PoderResponse>> criar(
             @Parameter(description = "Chave única para garantir idempotência no POST", required = true)
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @RequestBody @Valid Poder poder) {
@@ -106,7 +107,7 @@ public class PoderController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(toModel(novo));
+                .body(toModel(PoderResponse.from(novo)));
     }
 
     @Operation(
@@ -122,13 +123,13 @@ public class PoderController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<Poder>> atualizar(
+    public ResponseEntity<EntityModel<PoderResponse>> atualizar(
             @PathVariable Long id,
             @RequestBody @Valid Poder poder) {
 
         Poder atualizado = service.atualizar(id, poder);
 
-        return ResponseEntity.ok(toModel(atualizado));
+        return ResponseEntity.ok(toModel(PoderResponse.from(atualizado)));
     }
 
     @Operation(
@@ -163,17 +164,17 @@ public class PoderController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping("/buscar")
-    public ResponseEntity<PagedModel<EntityModel<Poder>>> buscarPorNome(
+    public ResponseEntity<PagedModel<EntityModel<PoderResponse>>> buscarPorNome(
             @RequestParam String nome,
             @ParameterObject Pageable pageable) {
 
         Page<Poder> pagina = service.buscarPorNome(nome, pageable);
 
         var lista = pagina.getContent().stream()
-                .map(this::toModel)
+                .map(p -> toModel(PoderResponse.from(p)))
                 .toList();
 
-        PagedModel<EntityModel<Poder>> pagedModel =
+        PagedModel<EntityModel<PoderResponse>> pagedModel =
                 PagedModel.of(
                         lista,
                         new PagedModel.PageMetadata(
@@ -186,14 +187,14 @@ public class PoderController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    private EntityModel<Poder> toModel(Poder poder) {
+    private EntityModel<PoderResponse> toModel(PoderResponse poder) {
 
         return EntityModel.of(
                 poder,
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(PoderController.class)
-                                .buscar(poder.getId())
+                                .buscar(poder.id())
                 ).withSelfRel(),
 
                 WebMvcLinkBuilder.linkTo(
@@ -203,12 +204,12 @@ public class PoderController {
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(PoderController.class)
-                                .atualizar(poder.getId(), null)
+                                .atualizar(poder.id(), null)
                 ).withRel("update"),
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(PoderController.class)
-                                .deletar(poder.getId())
+                                .deletar(poder.id())
                 ).withRel("delete")
         );
     }
