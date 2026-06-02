@@ -21,7 +21,7 @@ import senac.tsi.superhero.services.EsconderijoService;
 import senac.tsi.superhero.services.IdempotencyService;
 
 @RestController
-@RequestMapping("/Esconderijos")
+@RequestMapping("esconderijos")
 @Tag(name = "Esconderijos", description = "Endpoints para gerenciamento dos esconderijos cadastrados na API")
 public class EsconderijoController {
 
