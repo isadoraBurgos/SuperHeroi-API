@@ -45,7 +45,7 @@ public class CorsConfig {
                 "X-API-Version"
         ));
 
-        config.setAllowCredentials(false);
+        config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
