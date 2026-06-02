@@ -187,6 +187,35 @@ public class SuperHeroiController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @Operation(summary = "Adicionar poder ao herói")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Poder adicionado ao herói com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Herói ou poder não encontrado"),
+            @ApiResponse(responseCode = "409", description = "Herói já possui esse poder")
+    })
+    @PostMapping("/{id}/poderes/{poderId}")
+    public ResponseEntity<EntityModel<SuperHeroiResponse>> adicionarPoder(
+            @PathVariable Long id,
+            @PathVariable Long poderId) {
+
+        SuperHeroi atualizado = service.adicionarPoder(id, poderId);
+        return ResponseEntity.ok(toModel(SuperHeroiResponse.from(atualizado)));
+    }
+
+    @Operation(summary = "Remover poder do herói")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Poder removido do herói com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Herói ou poder não encontrado")
+    })
+    @DeleteMapping("/{id}/poderes/{poderId}")
+    public ResponseEntity<EntityModel<SuperHeroiResponse>> removerPoder(
+            @PathVariable Long id,
+            @PathVariable Long poderId) {
+
+        SuperHeroi atualizado = service.removerPoder(id, poderId);
+        return ResponseEntity.ok(toModel(SuperHeroiResponse.from(atualizado)));
+    }
+
     private EntityModel<SuperHeroiResponse> toModel(SuperHeroiResponse heroi) {
 
         return EntityModel.of(
