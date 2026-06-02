@@ -16,6 +16,7 @@ import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import senac.tsi.superhero.dto.SuperHeroiResponse;
 import senac.tsi.superhero.entities.SuperHeroi;
 import senac.tsi.superhero.services.IdempotencyService;
 import senac.tsi.superhero.services.SuperHeroiService;
@@ -42,16 +43,16 @@ public class SuperHeroiController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping
-    public ResponseEntity<PagedModel<EntityModel<SuperHeroi>>> listar(
+    public ResponseEntity<PagedModel<EntityModel<SuperHeroiResponse>>> listar(
             @ParameterObject Pageable pageable) {
 
         Page<SuperHeroi> pagina = service.listar(pageable);
 
         var lista = pagina.getContent().stream()
-                .map(this::toModel)
+                .map(h -> toModel(SuperHeroiResponse.from(h)))
                 .toList();
 
-        PagedModel<EntityModel<SuperHeroi>> pagedModel =
+        PagedModel<EntityModel<SuperHeroiResponse>> pagedModel =
                 PagedModel.of(
                         lista,
                         new PagedModel.PageMetadata(
@@ -76,11 +77,11 @@ public class SuperHeroiController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<SuperHeroi>> buscar(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<SuperHeroiResponse>> buscar(@PathVariable Long id) {
 
         SuperHeroi heroi = service.buscarPorId(id);
 
-        return ResponseEntity.ok(toModel(heroi));
+        return ResponseEntity.ok(toModel(SuperHeroiResponse.from(heroi)));
     }
 
     @Operation(
@@ -95,7 +96,7 @@ public class SuperHeroiController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @PostMapping
-    public ResponseEntity<EntityModel<SuperHeroi>> criar(
+    public ResponseEntity<EntityModel<SuperHeroiResponse>> criar(
             @Parameter(description = "Chave única para garantir idempotência no POST", required = true)
             @RequestHeader("X-Idempotency-Key") String idempotencyKey,
             @RequestBody @Valid SuperHeroi heroi) {
@@ -106,7 +107,7 @@ public class SuperHeroiController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(toModel(novoHeroi));
+                .body(toModel(SuperHeroiResponse.from(novoHeroi)));
     }
 
     @Operation(
@@ -122,13 +123,13 @@ public class SuperHeroiController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<SuperHeroi>> atualizar(
+    public ResponseEntity<EntityModel<SuperHeroiResponse>> atualizar(
             @PathVariable Long id,
             @RequestBody @Valid SuperHeroi heroi) {
 
         SuperHeroi atualizado = service.atualizar(id, heroi);
 
-        return ResponseEntity.ok(toModel(atualizado));
+        return ResponseEntity.ok(toModel(SuperHeroiResponse.from(atualizado)));
     }
 
     @Operation(
@@ -163,17 +164,17 @@ public class SuperHeroiController {
             @ApiResponse(responseCode = "429", description = "Limite de requisições excedido. Aguarde o tempo indicado no header Retry-After")
     })
     @GetMapping("/buscar")
-    public ResponseEntity<PagedModel<EntityModel<SuperHeroi>>> buscarPorNome(
+    public ResponseEntity<PagedModel<EntityModel<SuperHeroiResponse>>> buscarPorNome(
             @RequestParam String nome,
             @ParameterObject Pageable pageable) {
 
         Page<SuperHeroi> pagina = service.buscarPorNome(nome, pageable);
 
         var lista = pagina.getContent().stream()
-                .map(this::toModel)
+                .map(h -> toModel(SuperHeroiResponse.from(h)))
                 .toList();
 
-        PagedModel<EntityModel<SuperHeroi>> pagedModel =
+        PagedModel<EntityModel<SuperHeroiResponse>> pagedModel =
                 PagedModel.of(
                         lista,
                         new PagedModel.PageMetadata(
@@ -186,14 +187,14 @@ public class SuperHeroiController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    private EntityModel<SuperHeroi> toModel(SuperHeroi heroi) {
+    private EntityModel<SuperHeroiResponse> toModel(SuperHeroiResponse heroi) {
 
         return EntityModel.of(
                 heroi,
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(SuperHeroiController.class)
-                                .buscar(heroi.getId())
+                                .buscar(heroi.id())
                 ).withSelfRel(),
 
                 WebMvcLinkBuilder.linkTo(
@@ -203,12 +204,12 @@ public class SuperHeroiController {
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(SuperHeroiController.class)
-                                .atualizar(heroi.getId(), null)
+                                .atualizar(heroi.id(), null)
                 ).withRel("update"),
 
                 WebMvcLinkBuilder.linkTo(
                         WebMvcLinkBuilder.methodOn(SuperHeroiController.class)
-                                .deletar(heroi.getId())
+                                .deletar(heroi.id())
                 ).withRel("delete")
         );
     }
