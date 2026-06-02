@@ -7,13 +7,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import senac.tsi.superhero.entities.Grupo;
+import senac.tsi.superhero.entities.SuperHeroi;
 import senac.tsi.superhero.repositories.GrupoRepository;
+import senac.tsi.superhero.repositories.SuperHeroiRepository;
+
+import java.util.ArrayList;
 
 @Service
 public class GrupoService {
 
     @Autowired
     private GrupoRepository repository;
+
+    @Autowired
+    private SuperHeroiRepository heroiRepository;
 
     public Page<Grupo> listar(Pageable pageable) {
         return repository.findAll(pageable);
@@ -42,7 +49,6 @@ public class GrupoService {
 
         grupo.setNome(grupoAtualizado.getNome());
 
-        // Relacionamentos (opcional)
         if (grupoAtualizado.getHerois() != null) {
             grupo.setHerois(grupoAtualizado.getHerois());
         }
@@ -73,5 +79,53 @@ public class GrupoService {
         }
 
         return resultado;
+    }
+
+    public Grupo adicionarHeroi(Long grupoId, Long heroiId) {
+        Grupo grupo = buscarPorId(grupoId);
+
+        SuperHeroi heroi = heroiRepository.findById(heroiId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Herói não encontrado"
+                ));
+
+        if (grupo.getHerois() == null) {
+            grupo.setHerois(new ArrayList<>());
+        }
+
+        boolean jaExiste = grupo.getHerois().stream()
+                .anyMatch(h -> h.getId().equals(heroiId));
+
+        if (jaExiste) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Herói já pertence a este grupo"
+            );
+        }
+
+        grupo.getHerois().add(heroi);
+        return repository.save(grupo);
+    }
+
+    public Grupo removerHeroi(Long grupoId, Long heroiId) {
+        Grupo grupo = buscarPorId(grupoId);
+
+        if (grupo.getHerois() == null || grupo.getHerois().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Herói não encontrado neste grupo"
+            );
+        }
+
+        boolean removido = grupo.getHerois().removeIf(h -> h.getId().equals(heroiId));
+
+        if (!removido) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Herói não encontrado neste grupo"
+            );
+        }
+
+        return repository.save(grupo);
     }
 }

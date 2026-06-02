@@ -186,6 +186,35 @@ public class GrupoController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @Operation(summary = "Adicionar herói ao grupo")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Herói adicionado ao grupo com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Grupo ou herói não encontrado"),
+            @ApiResponse(responseCode = "409", description = "Herói já pertence ao grupo")
+    })
+    @PostMapping("/{id}/herois/{heroiId}")
+    public ResponseEntity<EntityModel<Grupo>> adicionarHeroi(
+            @PathVariable Long id,
+            @PathVariable Long heroiId) {
+
+        Grupo atualizado = service.adicionarHeroi(id, heroiId);
+        return ResponseEntity.ok(toModel(atualizado));
+    }
+
+    @Operation(summary = "Remover herói do grupo")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Herói removido do grupo com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Grupo ou herói não encontrado")
+    })
+    @DeleteMapping("/{id}/herois/{heroiId}")
+    public ResponseEntity<EntityModel<Grupo>> removerHeroi(
+            @PathVariable Long id,
+            @PathVariable Long heroiId) {
+
+        Grupo atualizado = service.removerHeroi(id, heroiId);
+        return ResponseEntity.ok(toModel(atualizado));
+    }
+
     private EntityModel<Grupo> toModel(Grupo grupo) {
 
         return EntityModel.of(
